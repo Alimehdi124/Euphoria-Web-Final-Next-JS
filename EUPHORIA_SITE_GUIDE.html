@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="az">
+<head>
+  <meta charset="utf-8">
+  <title>Euphoria E-commerce | Sayt haqqında</title>
+  <style>
+    @page { size:A4; margin:18mm 16mm 16mm; }
+    :root { --ink:#3c4242; --muted:#707477; --purple:#8a33fd; --line:#e4e5e8; --soft:#f6f6f6; }
+    * { box-sizing:border-box; } body { margin:0; color:var(--ink); font:10.5pt/1.55 Arial,sans-serif; }
+    h1,h2,h3 { margin:0; } h1 { font-size:32pt; line-height:1.05; letter-spacing:-1px; }
+    h2 { margin:24px 0 10px; padding-left:11px; border-left:4px solid var(--purple); font-size:18pt; }
+    h3 { margin:15px 0 5px; font-size:12pt; } p { margin:6px 0 10px; }
+    .cover { min-height:245mm; display:flex; flex-direction:column; justify-content:space-between; padding:15mm 5mm 10mm; }
+    .brand { color:var(--purple); font-weight:bold; letter-spacing:2px; text-transform:uppercase; font-size:10pt; }
+    .intro { max-width:135mm; margin-top:30mm; } .intro p { color:var(--muted); font-size:13pt; }
+    .meta { border-top:1px solid var(--line); padding-top:12px; color:var(--muted); }
+    .page { page-break-before:always; } .lead { color:var(--muted); max-width:165mm; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .card { border:1px solid var(--line); border-radius:8px; padding:12px; } .card strong { display:block; margin-bottom:4px; }
+    table { width:100%; border-collapse:collapse; margin:8px 0 14px; font-size:9.5pt; }
+    th,td { border:1px solid var(--line); padding:7px 8px; text-align:left; vertical-align:top; } th { background:var(--soft); }
+    code { color:#5c22aa; background:#f1eaff; border-radius:3px; padding:1px 4px; font:9pt Consolas,monospace; }
+    pre { margin:8px 0; padding:12px; border-radius:7px; background:#292d2e; color:#f5f5f5; font:8.5pt/1.55 Consolas,monospace; }
+    .step { display:grid; grid-template-columns:28px 1fr; gap:10px; margin:10px 0; align-items:start; }
+    .number { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; background:var(--purple); color:#fff; font-weight:bold; }
+    .note { border-left:3px solid var(--purple); background:#faf8ff; padding:10px 12px; margin:12px 0; }
+    ul { margin:6px 0 12px 18px; padding:0; } li { margin:3px 0; }
+    .footer { margin-top:25px; padding-top:8px; border-top:1px solid var(--line); color:var(--muted); font-size:8.5pt; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <div class="brand">Euphoria / Site guide</div>
+    <div class="intro"><h1>Euphoria saytının ümumi izahı</h1><p>Bu sənəd saytın nə məqsədlə hazırlandığını, istifadəçinin səhifələr arasında necə hərəkət etdiyini və layihənin texniki olaraq necə qurulduğunu sadə dildə izah edir.</p></div>
+    <div class="meta"><strong>Layihə:</strong> Euphoria E-commerce<br><strong>Frontend:</strong> Next.js, TypeScript, Tailwind CSS<br><strong>Hazırlanmış səhifələr:</strong> Ana səhifə, kateqoriyalar, məhsul detalları, səbət, checkout, hesab və authentication</div>
+  </section>
+
+  <section class="page">
+    <h2>1. Sayt nə üçündür?</h2>
+    <p class="lead">Euphoria geyim və gündəlik moda məhsullarını təqdim edən e-commerce saytıdır. Dizaynın əsas məqsədi məhsulu ön plana çıxarmaq, istifadəçiyə kateqoriyalar arasında rahat keçid vermək və alış prosesini qısa saxlamaqdır.</p>
+    <div class="grid"><div class="card"><strong>Sadə naviqasiya</strong>Header-də Shop, Men, Women, Combos və Joggers bölmələri var.</div><div class="card"><strong>Məhsul kəşfi</strong>New Arrival, Deals, kateqoriya kartları və Trending bölmələri məhsul seçimlərini asanlaşdırır.</div><div class="card"><strong>Alış prosesi</strong>Məhsul detail səhifəsindən ölçü və rəng seçilib səbətə əlavə olunur.</div><div class="card"><strong>Hesab idarəsi</strong>Login, register, hesab məlumatları və wishlist səhifələri mövcuddur.</div></div>
+    <h3>İstifadəçinin tipik yolu</h3>
+    <div class="step"><span class="number">1</span><div><strong>Sayta daxil olur</strong><br>Ana səhifədə hero banner və seçilmiş məhsullara baxır.</div></div>
+    <div class="step"><span class="number">2</span><div><strong>Kateqoriya seçir</strong><br>Women, Men və ya digər bölmələrdən məhsul siyahısına keçir.</div></div>
+    <div class="step"><span class="number">3</span><div><strong>Məhsulu araşdırır</strong><br>Şəkilləri, qiyməti, ölçüləri, rəngi və məhsul təsvirini görür.</div></div>
+    <div class="step"><span class="number">4</span><div><strong>Sifarişi tamamlayır</strong><br>Məhsulu səbətə əlavə edib checkout formasını doldurur.</div></div>
+  </section>
+
+  <section class="page">
+    <h2>2. Saytdakı səhifələr</h2>
+    <table><thead><tr><th>Səhifə</th><th>İstifadə məqsədi</th></tr></thead><tbody>
+      <tr><td>Ana səhifə</td><td>Hero banner, yeni məhsullar, kampaniyalar, qadın/kişi kateqoriyaları və trend məhsullar.</td></tr>
+      <tr><td>Shop / Women / Men</td><td>Məhsulların grid şəklində göstərilməsi, kateqoriya sidebar-ı və qiymət/rəng filter görünüşü.</td></tr>
+      <tr><td>Combos / Joggers</td><td>Seçilmiş məhsul qruplarını ayrıca təqdim edən kateqoriya səhifələri.</td></tr>
+      <tr><td>Product detail</td><td>Gallery, məhsul adı, brand, rating, qiymət, ölçü, rəng, quantity və səbətə əlavə etmə.</td></tr>
+      <tr><td>Cart / Empty cart</td><td>Səbətdəki məhsullar, quantity idarəsi, silmə, subtotal və ümumi məbləğ.</td></tr>
+      <tr><td>Checkout</td><td>Billing details, shipping method, payment formu və order summary.</td></tr>
+      <tr><td>Login / Register</td><td>İstifadəçinin mock hesab yaratması və hesaba daxil olması.</td></tr>
+      <tr><td>My Account / Wishlist</td><td>Profil məlumatları, order history görünüşü və yadda saxlanılan məhsullar.</td></tr>
+    </tbody></table>
+    <div class="note">Bütün səhifələr responsive hazırlanıb. Desktop-da geniş grid və sidebar, mobil cihazlarda isə iki sütunlu məhsul görünüşü və açılan menyu istifadə olunur.</div>
+  </section>
+
+  <section class="page">
+    <h2>3. Sayt necə işləyir?</h2>
+    <h3>Login və Register</h3><p>İstifadəçi login səhifəsində düzgün email və minimum 8 simvolluq şifrə daxil etdikdə mock hesab aktiv olur və account səhifəsinə yönləndirilir. Register zamanı ad, soyad və email məlumatları götürülür. Bu məlumatlar brauzerin <code>localStorage</code> yaddaşında saxlanılır.</p>
+    <h3>Səbət</h3><p>Məhsul detail və wishlist səhifəsindəki Add to cart düyməsi səbətə məhsul əlavə edir. Header-də ümumi məhsul sayı görünür. Səbətdə plus/minus ilə quantity dəyişir, zibil qutusu ilə məhsul silinir. Səhifə yenilənsə belə səbət məlumatı qorunur.</p>
+    <h3>Checkout</h3><p>Checkout səhifəsində istifadəçidən ünvan, shipping və kart məlumatları üçün form sahələri alınır. Hazırkı versiya frontend təqdimatı üçün mock-dur; real ödəniş provider-i qoşulmayıb.</p>
+    <h3>Demo hesab</h3><pre>Email: istənilən düzgün email
+Password: minimum 8 simvol
+Nəticə: mock account səhifəsinə keçid</pre>
+  </section>
+
+  <section class="page">
+    <h2>4. Texniki quruluş</h2>
+    <p>Layihə Next.js App Router ilə hazırlanıb. Ortada ümumi layout var; Header, Footer, cart və auth provider bütün route-larda paylaşılır.</p>
+    <pre>src/app/          səhifə route-ları
+src/components/   Header, Footer, Card, Cart, Auth və UI hissələri
+src/lib/           ortaq məhsul datası
+tailwind.config.ts dizayn tokenləri
+next.config.mjs   şəkil domeni konfiqurasiyası</pre>
+    <div class="grid"><div class="card"><strong>Next.js</strong>Route sistemi, static product pages və production build üçün.</div><div class="card"><strong>TypeScript</strong>Məhsul, istifadəçi və cart məlumatlarının tiplənməsi üçün.</div><div class="card"><strong>Tailwind CSS</strong>Responsive utility class-lar və Figma rəng tokenləri üçün.</div><div class="card"><strong>Lucide React</strong>Search, heart, cart, user, menu və digər ikonlar üçün.</div></div>
+    <h3>İşə salmaq</h3><pre>npm install
+npm run dev
+
+# yoxlama
+npm run lint
+npm run build</pre>
+    <div class="footer">Euphoria E-commerce · Ümumi sayt izahı · Final təqdimat versiyası</div>
+  </section>
+</body>
+</html>
