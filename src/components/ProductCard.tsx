@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { Heart, Star } from "lucide-react";
-import { useState } from "react";
 import Link from "next/link";
+import { useWishlist } from "@/components/WishlistContext";
 
 export type Product = {
   name: string;
@@ -15,7 +15,8 @@ export type Product = {
 };
 
 export default function ProductCard({ product }: { product: Product }) {
-  const [liked, setLiked] = useState(false);
+  const { isSaved, toggle } = useWishlist();
+  const liked = product.slug ? isSaved(product.slug) : false;
 
   return (
     <article className="group min-w-0">
@@ -24,7 +25,7 @@ export default function ProductCard({ product }: { product: Product }) {
           <Image src={product.image} alt={product.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 280px" className="object-cover transition duration-500 group-hover:scale-105" />
         </Link>
         {product.tag && <span className="absolute left-3 top-3 rounded-pill bg-white px-3 py-1 font-causten text-xs font-semibold uppercase tracking-[0.12em] text-ink">{product.tag}</span>}
-        <button onClick={() => setLiked(!liked)} className={`absolute right-3 top-3 grid size-9 place-items-center rounded-full bg-white shadow-icon transition-colors ${liked ? "text-accent" : "text-ink"}`} aria-label={liked ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}>
+        <button onClick={() => product.slug && toggle(product.slug)} className={`absolute right-3 top-3 grid size-9 place-items-center rounded-full bg-white shadow-icon transition-colors ${liked ? "text-accent" : "text-ink"}`} aria-label={liked ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}>
           <Heart size={17} fill={liked ? "currentColor" : "none"} strokeWidth={1.8} />
         </button>
       </div>

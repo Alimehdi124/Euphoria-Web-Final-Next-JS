@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/components/CartContext";
 import { AuthProvider } from "@/components/AuthContext";
+import { WishlistProvider } from "@/components/WishlistContext";
 
 export const metadata: Metadata = {
   title: "Euphoria | Modern essentials",
@@ -16,9 +17,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <AuthProvider>
           <CartProvider>
-            <Header />
-            {children}
-            <Footer />
+            <WishlistProvider>
+              <Header />
+              {children}
+              <Footer />
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </body>

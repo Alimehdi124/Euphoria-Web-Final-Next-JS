@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { CatalogProduct } from "@/lib/products";
 import { useCart } from "@/components/CartContext";
+import { useWishlist } from "@/components/WishlistContext";
 
 const sizes = ["XS", "S", "M", "L", "XL"];
 const gallery = [
@@ -17,10 +18,11 @@ const gallery = [
 export default function ProductDetails({ product }: { product: CatalogProduct }) {
   const [activeImage, setActiveImage] = useState(0);
   const [size, setSize] = useState("M");
-  const [liked, setLiked] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
+  const { isSaved, toggle } = useWishlist();
+  const liked = isSaved(product.slug);
   const images = [product.image, ...gallery.filter((item) => item !== product.image)];
 
   return (
@@ -40,7 +42,7 @@ export default function ProductDetails({ product }: { product: CatalogProduct })
             <div className="my-7 h-px bg-line/70" />
             <div><div className="flex items-center justify-between"><h2 className="font-causten text-lg font-semibold text-ink">Select size</h2><button className="flex items-center gap-1 text-base font-medium text-muted">Size guide <ChevronDown size={17} /></button></div><div className="mt-4 flex flex-wrap gap-3">{sizes.map((item) => <button key={item} onClick={() => setSize(item)} className={`grid size-11 place-items-center rounded-soft border font-causten text-sm font-medium transition-colors ${size === item ? "border-ink bg-ink text-white" : "border-line text-ink hover:border-ink"}`}>{item}</button>)}</div></div>
             <div className="mt-8"><h2 className="font-causten text-lg font-semibold text-ink">Colours available</h2><div className="mt-4 flex gap-4"><button className="grid size-9 place-items-center rounded-full border border-ink"><span className="size-6 rounded-full bg-ink" /></button><button className="size-8 rounded-full bg-sunshine" /><button className="size-8 rounded-full bg-blush" /><button className="size-8 rounded-full bg-burgundy" /></div></div>
-            <div className="mt-9 flex flex-wrap gap-3"><div className="flex h-12 items-center rounded-soft bg-canvas"><button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="grid size-11 place-items-center text-ink" aria-label="Decrease quantity"><Minus size={16} /></button><span className="w-5 text-center font-causten text-sm font-semibold">{quantity}</span><button onClick={() => setQuantity(quantity + 1)} className="grid size-11 place-items-center text-ink" aria-label="Increase quantity"><Plus size={16} /></button></div><button onClick={() => { addToCart(product, quantity); setAdded(true); }} className="inline-flex min-h-12 flex-1 items-center justify-center gap-3 rounded-soft bg-accent px-6 font-causten text-lg font-semibold text-white transition-colors hover:bg-[#7422e0] sm:flex-none sm:px-10"><ShoppingBag size={19} /> {added ? "Added to cart" : "Add to cart"}</button><button onClick={() => setLiked(!liked)} className={`grid size-12 place-items-center rounded-soft border ${liked ? "border-accent text-accent" : "border-line text-ink"}`} aria-label="Add to wishlist"><Heart size={20} fill={liked ? "currentColor" : "none"} /></button></div>
+            <div className="mt-9 flex flex-wrap gap-3"><div className="flex h-12 items-center rounded-soft bg-canvas"><button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="grid size-11 place-items-center text-ink" aria-label="Decrease quantity"><Minus size={16} /></button><span className="w-5 text-center font-causten text-sm font-semibold">{quantity}</span><button onClick={() => setQuantity(quantity + 1)} className="grid size-11 place-items-center text-ink" aria-label="Increase quantity"><Plus size={16} /></button></div><button onClick={() => { addToCart(product, quantity); setAdded(true); }} className="inline-flex min-h-12 flex-1 items-center justify-center gap-3 rounded-soft bg-accent px-6 font-causten text-lg font-semibold text-white transition-colors hover:bg-[#7422e0] sm:flex-none sm:px-10"><ShoppingBag size={19} /> {added ? "Added to cart" : "Add to cart"}</button><button onClick={() => toggle(product.slug)} className={`grid size-12 place-items-center rounded-soft border ${liked ? "border-accent text-accent" : "border-line text-ink"}`} aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}><Heart size={20} fill={liked ? "currentColor" : "none"} /></button></div>
             <div className="my-8 h-px bg-line/70" />
             <div className="grid gap-5 sm:grid-cols-2"><div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-full bg-canvas"><Truck size={20} /></span><span className="font-causten text-base font-medium text-ink">Free shipping</span></div><div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-full bg-canvas"><Check size={20} /></span><span className="font-causten text-base font-medium text-ink">Secure payment</span></div></div>
           </div>

@@ -4,6 +4,8 @@ import { Heart, Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import type { FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartContext";
 
 const navItems = [
@@ -17,7 +19,16 @@ const navItems = [
 export default function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { count } = useCart();
+  const [search, setSearch] = useState("");
+
+  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = search.trim();
+    router.push(query ? `/shop?q=${encodeURIComponent(query)}` : "/shop");
+    setOpen(false);
+  };
 
   return (
     <header className="relative z-30 border-b border-line/70 bg-white">
@@ -35,10 +46,10 @@ export default function Header() {
           })}
         </nav>
 
-        <div className="ml-auto hidden h-11 w-[220px] items-center gap-3 rounded-soft bg-canvas px-4 md:flex xl:w-[267px]">
+        <form onSubmit={submitSearch} className="ml-auto hidden h-11 w-[220px] items-center gap-3 rounded-soft bg-canvas px-4 md:flex xl:w-[267px]">
           <Search size={20} strokeWidth={1.8} className="text-muted" />
-          <input className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted" placeholder="Search" aria-label="Search products" />
-        </div>
+          <input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted" placeholder="Search" aria-label="Search products" />
+        </form>
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3 md:ml-3">
           <Link href="/wishlist" className="grid size-10 place-items-center rounded-soft bg-canvas text-muted transition-colors hover:text-ink sm:size-11" aria-label="Wishlist">
@@ -59,13 +70,13 @@ export default function Header() {
 
       {open && (
         <nav className="absolute left-0 right-0 top-full border-b border-line/60 bg-white px-5 py-5 shadow-float lg:hidden" aria-label="Mobile navigation">
-          <div className="mb-4 flex h-11 items-center gap-3 rounded-soft bg-canvas px-4 md:hidden">
+          <form onSubmit={submitSearch} className="mb-4 flex h-11 items-center gap-3 rounded-soft bg-canvas px-4 md:hidden">
             <Search size={19} className="text-muted" />
-            <input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted" placeholder="Search" aria-label="Search products" />
-          </div>
+            <input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted" placeholder="Search" aria-label="Search products" />
+          </form>
           <div className="grid gap-1">
             {navItems.map((item, index) => (
-              <Link key={item.label} href={item.href} onClick={() => setOpen(false)} className={`rounded-soft px-3 py-3 text-lg ${index === 0 ? "bg-canvas font-bold text-ink" : "font-medium text-muted"}`}>
+              <Link key={item.label} href={item.href} onClick={() => setOpen(false)} className={`rounded-soft px-3 py-3 text-lg ${item.href === "/shop" ? (pathname === "/" || pathname === "/shop" ? "bg-canvas font-bold text-ink" : "font-medium text-muted") : pathname.startsWith(item.href) ? "bg-canvas font-bold text-ink" : "font-medium text-muted"}`}>
                 {item.label}
               </Link>
             ))}

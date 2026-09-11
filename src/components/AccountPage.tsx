@@ -14,7 +14,12 @@ const accountLinks = [
 export default function AccountPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const profile = user ?? { firstName: "Jhanvi", lastName: "Shah", email: "jhanvi.shah@example.com", phone: "(405) 555-0128" };
+
+  if (!user) {
+    return <main className="mx-auto grid min-h-[520px] max-w-content place-items-center px-5 py-16 text-center sm:px-8 lg:px-0"><div><h1 className="font-core text-3xl font-semibold text-ink">Sign in to view your account</h1><p className="mt-3 text-muted">Your profile and order history will appear here after you sign in.</p><Link href="/login" className="mt-7 inline-flex rounded-soft bg-accent px-8 py-3 font-semibold text-white">Go to login</Link></div></main>;
+  }
+
+  const profile = user;
 
   return (
     <main className="mx-auto max-w-content px-5 py-10 sm:px-8 sm:py-14 lg:px-0 lg:py-16">

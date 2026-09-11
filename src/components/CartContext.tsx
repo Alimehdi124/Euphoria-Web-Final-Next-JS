@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { products, type CatalogProduct } from "@/lib/products";
+import type { CatalogProduct } from "@/lib/products";
 
 export type CartItem = { product: CatalogProduct; quantity: number };
 
@@ -14,7 +14,7 @@ type CartContextValue = {
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
-const initialItems: CartItem[] = products.slice(0, 3).map((product, index) => ({ product, quantity: index + 1 }));
+const initialItems: CartItem[] = [];
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(initialItems);
