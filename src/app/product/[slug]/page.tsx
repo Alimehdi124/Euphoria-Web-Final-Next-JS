@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import ProductDetails from "@/components/ProductDetails";
-import { getProduct, products } from "@/lib/products";
+import { products } from "@/lib/products";
+import { getCatalogProduct } from "@/lib/catalog";
 
 export function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
@@ -8,7 +9,7 @@ export function generateStaticParams() {
 
 export default async function ProductAliasPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getCatalogProduct(slug);
   if (!product) notFound();
   return <ProductDetails product={product} />;
 }

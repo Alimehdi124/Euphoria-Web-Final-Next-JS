@@ -3,25 +3,28 @@
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useLanguage } from "@/components/LanguageProvider";
 import ProductCard from "@/components/ProductCard";
 import SectionHeading from "@/components/SectionHeading";
-import { products, type CatalogProduct } from "@/lib/products";
+import type { CatalogProduct } from "@/lib/products";
 
 type CatalogPageProps = {
   category?: CatalogProduct["category"];
   title: string;
   description: string;
   queryText?: string;
+  catalogProducts: CatalogProduct[];
 };
 
 const colors = ["All", "Black", "Blue", "Cream", "Green", "White", "Yellow"];
 
-export default function CatalogPage({ category, title, description, queryText = "" }: CatalogPageProps) {
+export default function CatalogPage({ category, title, description, queryText = "", catalogProducts }: CatalogPageProps) {
   const [selectedColor, setSelectedColor] = useState("All");
   const [sort, setSort] = useState("recommended");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const { t } = useLanguage();
   const query = queryText.trim().toLowerCase();
-  const filtered = products.filter((product) => {
+  const filtered = catalogProducts.filter((product) => {
     const matchesCategory = category ? product.category === category : true;
     const matchesColor = selectedColor === "All" || product.color === selectedColor;
     const matchesQuery = !query || `${product.name} ${product.brand} ${product.description}`.toLowerCase().includes(query);
@@ -42,7 +45,7 @@ export default function CatalogPage({ category, title, description, queryText = 
           <SectionHeading title={title} />
           <p className="max-w-[650px] font-causten text-base leading-7 text-muted">{description}</p>
         </div>
-         <button onClick={() => setFiltersOpen(!filtersOpen)} className="inline-flex items-center gap-2 rounded-soft border border-line px-5 py-3 font-causten text-sm font-semibold text-ink lg:hidden" aria-expanded={filtersOpen}><SlidersHorizontal size={17} /> Filters</button>
+         <button onClick={() => setFiltersOpen(!filtersOpen)} className="inline-flex items-center gap-2 rounded-soft border border-line px-5 py-3 font-causten text-sm font-semibold text-ink lg:hidden" aria-expanded={filtersOpen}><SlidersHorizontal size={17} /> {t("catalog.filters")}</button>
       </div>
       <div className="grid gap-10 lg:grid-cols-[295px_1fr] lg:gap-12">
          <aside className={`${filtersOpen ? "block" : "hidden"} rounded-b-soft border border-line/50 lg:block`}>
@@ -51,7 +54,7 @@ export default function CatalogPage({ category, title, description, queryText = 
           <div className="px-7 py-6"><div className="mb-5 flex items-center justify-between"><h3 className="font-causten text-lg font-semibold text-muted">Price</h3><ChevronDown size={18} /></div><div className="h-1 rounded-pill bg-gradient-to-r from-accent via-accent to-line" /><div className="mt-4 flex justify-between text-sm text-muted"><span>$20</span><span>$200</span></div></div>
         </aside>
         <section>
-           <div className="mb-6 flex items-center justify-between gap-4"><p className="font-causten text-base text-muted">{visible.length} items{query ? ` for “${queryText}"` : ""}</p><label className="flex items-center gap-2 rounded-soft border border-line/60 px-4 py-2.5 font-causten text-sm font-medium text-ink">Sort by:<select value={sort} onChange={(event) => setSort(event.target.value)} className="bg-transparent font-semibold outline-none"><option value="recommended">Recommended</option><option value="name">Name</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select><ChevronDown size={16} /></label></div>
+           <div className="mb-6 flex items-center justify-between gap-4"><p className="font-causten text-base text-muted">{visible.length} {t("catalog.items")}{query ? ` for “${queryText}"` : ""}</p><label className="flex items-center gap-2 rounded-soft border border-line/60 px-4 py-2.5 font-causten text-sm font-medium text-ink">{t("catalog.sort")}:<select value={sort} onChange={(event) => setSort(event.target.value)} className="bg-transparent font-semibold outline-none"><option value="recommended">{t("catalog.recommended")}</option><option value="name">Name</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select><ChevronDown size={16} /></label></div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 sm:gap-x-6 lg:gap-x-7">{visible.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
         </section>
       </div>

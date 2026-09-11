@@ -10,6 +10,7 @@ type CartContextValue = {
   addToCart: (product: CatalogProduct, quantity?: number) => void;
   changeQuantity: (slug: string, amount: number) => void;
   removeFromCart: (slug: string) => void;
+  clear: () => void;
   count: number;
 };
 
@@ -40,6 +41,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }),
     changeQuantity: (slug: string, amount: number) => setItems((current) => current.map((item) => item.product.slug === slug ? { ...item, quantity: Math.max(1, item.quantity + amount) } : item)),
     removeFromCart: (slug: string) => setItems((current) => current.filter((item) => item.product.slug !== slug)),
+    clear: () => setItems([]),
     count: items.reduce((total, item) => total + item.quantity, 0)
   }), [items]);
 

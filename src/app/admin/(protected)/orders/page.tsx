@@ -1,0 +1,13 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+type Order = { id: string; status: string; total: number; created_at: string; profiles?: { email?: string } | null };
+const statuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
+export default function AdminOrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]); const [error, setError] = useState("");
+  async function load() { const response = await fetch("/api/admin/orders"); const body = await response.json(); if (!response.ok) throw new Error(body.error); setOrders(body.orders); }
+  useEffect(() => { load().catch((reason: Error) => setError(reason.message)); }, []);
+  async function update(id: string, status: string) { const response = await fetch("/api/admin/orders", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) }); if (!response.ok) setError((await response.json()).error); else load(); }
+  return <div><p className="text-sm font-semibold uppercase tracking-widest text-muted">Management</p><h1 className="mt-2 font-core text-3xl font-semibold">Orders</h1>{error && <p className="mt-6 rounded-soft bg-[#ffe9e9] px-4 py-3 text-sm text-[#a51d2d]">{error}</p>}<section className="mt-8 overflow-hidden rounded-card bg-white shadow-card"><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="border-b border-line/50 bg-canvas text-xs uppercase tracking-widest text-muted"><tr><th className="px-5 py-4">Order</th><th className="px-5 py-4">Customer</th><th className="px-5 py-4">Total</th><th className="px-5 py-4">Date</th><th className="px-5 py-4">Status</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id} className="border-b border-line/30 last:border-0"><td className="px-5 py-4 font-semibold">#{order.id.slice(0, 8)}</td><td className="px-5 py-4 text-muted">{order.profiles?.email || "Guest"}</td><td className="px-5 py-4 font-semibold">${Number(order.total).toFixed(2)}</td><td className="px-5 py-4 text-muted">{new Date(order.created_at).toLocaleDateString()}</td><td className="px-5 py-4"><select value={order.status} onChange={(event) => update(order.id, event.target.value)} className="rounded-soft border border-line px-3 py-2 text-sm capitalize"><option value="pending">Pending</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></td></tr>)}</tbody></table></div>{!orders.length && !error && <p className="p-8 text-center text-sm text-muted">No orders found.</p>}</section></div>;
+}

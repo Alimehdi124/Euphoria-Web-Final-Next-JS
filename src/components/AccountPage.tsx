@@ -3,6 +3,7 @@
 import { Heart, LogOut, Package, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthContext";
 
 const accountLinks = [
@@ -14,6 +15,8 @@ const accountLinks = [
 export default function AccountPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [orders, setOrders] = useState<{ id: string; status: string; total: number; created_at: string }[]>([]);
+  useEffect(() => { fetch("/api/orders").then((response) => response.ok ? response.json() : { orders: [] }).then((body) => setOrders(body.orders || [])); }, []);
 
   if (!user) {
     return <main className="mx-auto grid min-h-[520px] max-w-content place-items-center px-5 py-16 text-center sm:px-8 lg:px-0"><div><h1 className="font-core text-3xl font-semibold text-ink">Sign in to view your account</h1><p className="mt-3 text-muted">Your profile and order history will appear here after you sign in.</p><Link href="/login" className="mt-7 inline-flex rounded-soft bg-accent px-8 py-3 font-semibold text-white">Go to login</Link></div></main>;
@@ -42,7 +45,7 @@ export default function AccountPage() {
             <label className="grid gap-2 text-sm font-semibold text-ink">Email address<input defaultValue={profile.email} className="mt-1 h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label>
           </div>
           <div className="mt-9 flex items-center justify-between border-b border-line/60 pb-7"><div><h2 className="font-core text-2xl font-semibold text-ink">Password</h2><div className="mt-3 flex gap-2 text-ink">{Array.from({ length: 8 }).map((_, index) => <span key={index} className="size-1.5 rounded-full bg-ink" />)}</div></div><button className="font-semibold text-ink underline underline-offset-4">Change</button></div>
-          <div id="orders" className="mt-9"><h2 className="font-core text-2xl font-semibold text-ink">Recent orders</h2><div className="mt-6 overflow-hidden rounded-card border border-line/50"><div className="grid grid-cols-3 bg-canvas px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted"><span>Order</span><span>Date</span><span>Status</span></div><div className="grid grid-cols-3 px-5 py-5 text-sm"><span className="font-semibold text-ink">#EUP-1024</span><span className="text-muted">24 Jan 2025</span><span className="font-semibold text-accent">Delivered</span></div></div></div>
+           <div id="orders" className="mt-9"><h2 className="font-core text-2xl font-semibold text-ink">Recent orders</h2><div className="mt-6 overflow-hidden rounded-card border border-line/50">{orders.length ? <><div className="grid grid-cols-4 bg-canvas px-5 py-4 text-xs font-bold uppercase tracking-widest text-muted"><span>Order</span><span>Date</span><span>Status</span><span className="text-right">Total</span></div>{orders.map((order) => <div key={order.id} className="grid grid-cols-4 px-5 py-5 text-sm"><span className="font-semibold text-ink">#{order.id.slice(0, 8)}</span><span className="text-muted">{new Date(order.created_at).toLocaleDateString()}</span><span className="font-semibold capitalize text-accent">{order.status}</span><span className="text-right font-semibold">${Number(order.total).toFixed(2)}</span></div>)}</> : <p className="px-5 py-8 text-sm text-muted">No orders yet.</p>}</div></div>
         </section>
       </div>
     </main>
