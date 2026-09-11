@@ -1,21 +1,13 @@
 import { NextResponse } from "next/server";
-import { getAdminContext } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/sqlserver/auth";
+import { getDb, sql } from "@/lib/sqlserver/db";
 
 export async function GET() {
-  const context = await getAdminContext();
-  if (!context) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const [products, users, orders, pending, completed, recentOrders] = await Promise.all([
-    context.supabase.from("products").select("id", { count: "exact", head: true }),
-    context.supabase.from("profiles").select("id", { count: "exact", head: true }),
-    context.supabase.from("orders").select("id", { count: "exact", head: true }),
-    context.supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    context.supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "delivered"),
-    context.supabase.from("orders").select("id, status, total, created_at, profiles(email)").order("created_at", { ascending: false }).limit(5)
-  ]);
-  const error = products.error || users.error || orders.error || recentOrders.error;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({
-    counts: { products: products.count ?? 0, users: users.count ?? 0, orders: orders.count ?? 0, pending: pending.count ?? 0, completed: completed.count ?? 0 },
-    recentOrders: recentOrders.data ?? []
-  });
+  if (!await requireAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const db = await getDb();
+  if (!db) return NextResponse.json({ error: "SQL Server is not configured" }, { status: 503 });
+  const result = await db.request().query("SELECT (SELECT COUNT(*) FROM dbo.Products) products, (SELECT COUNT(*) FROM dbo.Users) users, (SELECT COUNT(*) FROM dbo.Orders) orders, (SELECT COUNT(*) FROM dbo.Orders WHERE status = N'pending') pending, (SELECT COUNT(*) FROM dbo.Orders WHERE status = N'delivered') completed; SELECT TOP 5 id, status, total, created_at FROM dbo.Orders ORDER BY created_at DESC");
+  const counts = result.recordset[0];
+  const recentOrders = Array.isArray(result.recordsets) ? result.recordsets[1] || [] : [];
+  return NextResponse.json({ counts, recentOrders });
 }

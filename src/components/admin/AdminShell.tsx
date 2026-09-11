@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/components/LanguageProvider";
-import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export default function AdminShell({ email, children }: { email: string; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,7 +19,7 @@ export default function AdminShell({ email, children }: { email: string; childre
   ];
 
   async function signOut() {
-    await getSupabaseBrowserClient()?.auth.signOut();
+    await fetch("/api/auth/logout", { method: "POST" });
     router.push("/admin/login");
     router.refresh();
   }

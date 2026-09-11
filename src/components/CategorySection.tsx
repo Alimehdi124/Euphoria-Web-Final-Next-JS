@@ -1,5 +1,8 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const women = [
   { title: "Hoodies & Sweatshirts", image: "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=900&q=85" },
@@ -16,6 +19,7 @@ const men = [
 ];
 
 function CategoryCards({ items }: { items: typeof women }) {
+  const { t } = useLanguage();
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 lg:grid-cols-4 lg:gap-x-7">
       {items.map((item) => (
@@ -26,7 +30,7 @@ function CategoryCards({ items }: { items: typeof women }) {
           <div className="mt-4 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <h3 className="truncate font-poppins text-sm font-medium tracking-[-0.04em] text-charcoal sm:text-[17px]">{item.title}</h3>
-              <p className="mt-1 font-poppins text-xs font-medium text-[#7F7F7F] sm:text-[13px]">Explore now</p>
+               <p className="mt-1 font-poppins text-xs font-medium text-[#7F7F7F] sm:text-[13px]">{t("home.explore")}</p>
             </div>
             <ArrowRight size={19} className="shrink-0 text-muted transition-transform group-hover:translate-x-1" />
           </div>
@@ -37,14 +41,15 @@ function CategoryCards({ items }: { items: typeof women }) {
 }
 
 export default function CategorySection() {
+  const { t } = useLanguage();
   return (
     <section className="space-y-16 py-4 sm:space-y-20 sm:py-4 lg:space-y-24" aria-label="Shop by category">
       <div id="women">
-        <SectionHeading title="Categories For Women" />
+        <SectionHeading title={t("home.womenCategories")} />
         <CategoryCards items={women} />
       </div>
       <div id="men">
-        <SectionHeading title="Categories For Men" />
+        <SectionHeading title={t("home.menCategories")} />
         <CategoryCards items={men} />
       </div>
     </section>

@@ -1,21 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminContext } from "@/lib/supabase/admin";
-
-export async function GET() {
-  const context = await getAdminContext();
-  if (!context) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { data, error } = await context.supabase.from("orders").select("id, status, total, created_at, profiles(email), order_items(product_name, quantity, unit_price)").order("created_at", { ascending: false });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ orders: data ?? [] });
-}
-
-export async function PATCH(request: Request) {
-  const context = await getAdminContext();
-  if (!context) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const body = await request.json() as { id?: string; status?: string };
-  const statuses = new Set(["pending", "processing", "shipped", "delivered", "cancelled"]);
-  if (!body.id || !body.status || !statuses.has(body.status)) return NextResponse.json({ error: "Invalid order status" }, { status: 400 });
-  const { error } = await context.supabase.from("orders").update({ status: body.status }).eq("id", body.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
-}
+import { requireAdmin } from "@/lib/sqlserver/auth";
+import { getDb, sql } from "@/lib/sqlserver/db";
+export async function GET() { if (!await requireAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); const db = await getDb(); if (!db) return NextResponse.json({ error: "SQL Server is not configured" }, { status: 503 }); const result = await db.request().query("SELECT o.id, o.status, o.total, o.created_at, u.email FROM dbo.Orders o INNER JOIN dbo.Users u ON u.id=o.user_id ORDER BY o.created_at DESC"); return NextResponse.json({ orders: result.recordset.map((row) => ({ ...row, id: row.id.toString(), profiles: { email: row.email } })) }); }
+export async function PATCH(request: Request) { if (!await requireAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); const db = await getDb(); if (!db) return NextResponse.json({ error: "SQL Server is not configured" }, { status: 503 }); const body = await request.json() as { id?: string; status?: string }; if (!body.id || !["pending", "processing", "shipped", "delivered", "cancelled"].includes(body.status || "")) return NextResponse.json({ error: "Invalid status" }, { status: 400 }); await db.request().input("id", sql.UniqueIdentifier, body.id).input("status", sql.NVarChar(20), body.status).query("UPDATE dbo.Orders SET status=@status WHERE id=@id"); return NextResponse.json({ ok: true }); }

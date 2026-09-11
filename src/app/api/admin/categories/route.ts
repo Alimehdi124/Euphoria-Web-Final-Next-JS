@@ -1,22 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminContext } from "@/lib/supabase/admin";
-
-export async function GET() {
-  const context = await getAdminContext();
-  if (!context) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { data, error } = await context.supabase.from("categories").select("*").order("created_at", { ascending: false });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ categories: data ?? [] });
-}
-
-export async function POST(request: Request) {
-  const context = await getAdminContext();
-  if (!context) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const body = await request.json() as { slug?: string; name?: string; nameAz?: string; nameRu?: string };
-  const name = String(body.name ?? "").trim();
-  const slug = String(body.slug ?? name.toLowerCase().replace(/[^a-z0-9]+/g, "-")).trim();
-  if (!name || !slug) return NextResponse.json({ error: "Name and slug are required" }, { status: 400 });
-  const { data, error } = await context.supabase.from("categories").insert({ slug, name: { en: name, az: body.nameAz || name, ru: body.nameRu || name } }).select("*").single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ category: data }, { status: 201 });
-}
+import { requireAdmin } from "@/lib/sqlserver/auth";
+import { getDb, sql } from "@/lib/sqlserver/db";
+export async function GET() { if (!await requireAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); const db = await getDb(); if (!db) return NextResponse.json({ error: "SQL Server is not configured" }, { status: 503 }); const result = await db.request().query("SELECT id, slug, name_en, name_az, is_active FROM dbo.Categories ORDER BY created_at DESC"); return NextResponse.json({ categories: result.recordset.map((row) => ({ ...row, id: row.id.toString(), name: { en: row.name_en, az: row.name_az } })) }); }
+export async function POST(request: Request) { if (!await requireAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); const db = await getDb(); if (!db) return NextResponse.json({ error: "SQL Server is not configured" }, { status: 503 }); const body = await request.json() as { name?: string; nameAz?: string }; const name = String(body.name || "").trim(); const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-"); if (!name || !slug) return NextResponse.json({ error: "Name is required" }, { status: 400 }); await db.request().input("slug", sql.NVarChar(160), slug).input("nameEn", sql.NVarChar(160), name).input("nameAz", sql.NVarChar(160), body.nameAz || name).query("INSERT INTO dbo.Categories (slug, name_en, name_az) VALUES (@slug, @nameEn, @nameAz)"); return NextResponse.json({ ok: true }, { status: 201 }); }

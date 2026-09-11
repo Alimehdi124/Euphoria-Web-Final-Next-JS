@@ -18,7 +18,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = window.localStorage.getItem("euphoria-locale");
-    if (saved === "en" || saved === "az" || saved === "ru") setLocaleState(saved);
+    if (saved === "en" || saved === "az") setLocaleState(saved);
   }, []);
 
   useEffect(() => {

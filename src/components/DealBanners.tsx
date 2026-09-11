@@ -1,4 +1,7 @@
+"use client";
+
 import { ArrowUpRight } from "lucide-react";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const deals = [
   { label: "Limited offer", title: "High coziness", detail: "Up to 50% off", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85", position: "object-[center_25%]" },
@@ -6,6 +9,7 @@ const deals = [
 ];
 
 export default function DealBanners() {
+  const { t } = useLanguage();
   return (
     <section className="grid gap-5 pb-16 sm:gap-6 sm:pb-20 lg:grid-cols-2 lg:pb-24" aria-label="Featured offers">
       {deals.map((deal) => (
@@ -18,7 +22,7 @@ export default function DealBanners() {
               <h2 className="mt-7 font-core text-[32px] font-extrabold leading-tight sm:text-[34px]">{deal.title}</h2>
               <p className="mt-3 font-core text-base font-medium tracking-wide">{deal.detail}</p>
             </div>
-            <a href="#shop" className="inline-flex w-fit items-center gap-2 font-core text-lg font-extrabold underline underline-offset-4">Shop now <ArrowUpRight size={18} /></a>
+            <a href="#shop" className="inline-flex w-fit items-center gap-2 font-core text-lg font-extrabold underline underline-offset-4">{t("common.shopNow")} <ArrowUpRight size={18} /></a>
           </div>
         </article>
       ))}

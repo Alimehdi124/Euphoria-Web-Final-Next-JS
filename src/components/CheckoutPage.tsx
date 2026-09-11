@@ -4,31 +4,31 @@ import { FormEvent, useState } from "react";
 import { LockKeyhole } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartContext";
 import { useAuth } from "@/components/AuthContext";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const fields = ["firstName", "lastName", "country", "street", "city", "state", "postalCode"];
 
 export default function CheckoutPage() {
-  const { items, clear } = useCart();
+  const { items } = useCart();
   const { user } = useAuth();
-  const router = useRouter();
+  const { t } = useLanguage();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const subtotal = items.reduce((sum, item) => sum + Number(item.product.price.replace("$", "")) * item.quantity, 0);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError("");
-    if (!user) { setError("Please sign in before checkout."); return; }
+    if (!user) { setError(t("checkout.signIn")); return; }
     if (!items.length) { setError("Your cart is empty."); return; }
     setSubmitting(true);
     const form = new FormData(event.currentTarget);
     const shippingAddress = Object.fromEntries(fields.map((field) => [field, String(form.get(field) || "")]));
-    const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: items.map((item) => ({ slug: item.product.slug, quantity: item.quantity })), shippingAddress }) });
+    const response = await fetch("/api/payments/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: items.map((item) => ({ slug: item.product.slug, quantity: item.quantity })), shippingAddress }) });
     const body = await response.json();
     if (!response.ok) setError(body.error || "Could not create order.");
-    else { clear(); router.push(`/account?order=${body.orderId}`); }
+    else if (body.url) window.location.assign(body.url);
     setSubmitting(false);
   }
 
