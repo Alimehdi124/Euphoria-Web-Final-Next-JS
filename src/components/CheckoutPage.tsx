@@ -1,19 +1,19 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { CardCvcElement, CardExpiryElement, CardNumberElement, Elements, useElements, useStripe } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import { LockKeyhole } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { CardCvcElement, CardExpiryElement, CardNumberElement, Elements, useElements, useStripe } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
 import { useRouter } from "next/navigation";
-import { useCart } from "@/components/CartContext";
 import { useAuth } from "@/components/AuthContext";
+import { useCart } from "@/components/CartContext";
 import { useLanguage } from "@/components/LanguageProvider";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "");
-
 const fields = ["firstName", "lastName", "country", "street", "city", "state", "postalCode"];
+const elementOptions = { style: { base: { color: "#3C4242", fontFamily: "Arial, sans-serif", fontSize: "16px", "::placeholder": { color: "#807D7E" } } } };
 
 export default function CheckoutPage() {
   return <Elements stripe={stripePromise}><CheckoutForm /></Elements>;
@@ -28,33 +28,42 @@ function CheckoutForm() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const demoPayments = process.env.NEXT_PUBLIC_DEMO_PAYMENTS === "true";
   const subtotal = items.reduce((sum, item) => sum + Number(item.product.price.replace("$", "")) * item.quantity, 0);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setError("");
+    event.preventDefault();
+    setError("");
     if (!user) { setError(t("checkout.signIn")); return; }
     if (!items.length) { setError("Your cart is empty."); return; }
     setSubmitting(true);
     const form = new FormData(event.currentTarget);
     const shippingAddress = Object.fromEntries(fields.map((field) => [field, String(form.get(field) || "")]));
-    if (!stripe || !elements) { setError("Payment form is not ready. Check the Stripe publishable key."); return; }
-    const response = await fetch("/api/payments/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: items.map((item) => ({ slug: item.product.slug, quantity: item.quantity })), shippingAddress }) });
+    const cart = items.map((item) => ({ slug: item.product.slug, quantity: item.quantity }));
+
+    if (demoPayments) {
+      const response = await fetch("/api/payments/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: cart, shippingAddress, cardNumber: String(form.get("demoCardNumber") || "").replace(/\s/g, ""), expiry: String(form.get("demoExpiry") || ""), cvc: String(form.get("demoCvc") || "") }) });
+      const body = await response.json();
+      if (!response.ok) setError(body.error || "Payment failed."); else { clear(); router.push(`/account?order=${body.orderId}`); }
+      setSubmitting(false);
+      return;
+    }
+
+    if (!stripe || !elements) { setError("Payment form is not ready. Check the Stripe publishable key."); setSubmitting(false); return; }
+    const response = await fetch("/api/payments/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: cart, shippingAddress }) });
     const body = await response.json();
-    if (!response.ok) setError(body.error || "Could not create order.");
-    else {
-      const cardNumber = elements.getElement(CardNumberElement);
-      if (!cardNumber) { setError("Card details are required."); setSubmitting(false); return; }
-      const payment = await stripe.confirmCardPayment(body.clientSecret, { payment_method: { card: cardNumber, billing_details: { name: `${shippingAddress.firstName} ${shippingAddress.lastName}`, email: user.email } } });
-      if (payment.error) setError(payment.error.message || "Payment failed.");
-      else if (payment.paymentIntent?.status === "succeeded") {
-        const complete = await fetch("/api/payments/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ paymentIntentId: payment.paymentIntent.id }) });
-        const completeBody = await complete.json();
-        if (!complete.ok) setError(completeBody.error || "Order could not be created."); else { clear(); router.push(`/account?order=${completeBody.orderId}`); }
-      }
+    if (!response.ok) { setError(body.error || "Could not create payment."); setSubmitting(false); return; }
+    const cardNumber = elements.getElement(CardNumberElement);
+    if (!cardNumber) { setError("Card details are required."); setSubmitting(false); return; }
+    const payment = await stripe.confirmCardPayment(body.clientSecret, { payment_method: { card: cardNumber, billing_details: { name: `${shippingAddress.firstName} ${shippingAddress.lastName}`, email: user.email } } });
+    if (payment.error) setError(payment.error.message || "Payment failed.");
+    else if (payment.paymentIntent?.status === "succeeded") {
+      const complete = await fetch("/api/payments/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ paymentIntentId: payment.paymentIntent.id }) });
+      const completeBody = await complete.json();
+      if (!complete.ok) setError(completeBody.error || "Order could not be created."); else { clear(); router.push(`/account?order=${completeBody.orderId}`); }
     }
     setSubmitting(false);
   }
 
-  const elementOptions = { style: { base: { color: "#3C4242", fontFamily: "Arial, sans-serif", fontSize: "16px", "::placeholder": { color: "#807D7E" } } } };
-  return <main className="mx-auto max-w-content px-5 py-10 sm:px-8 sm:py-14 lg:px-0 lg:py-16"><div className="mb-12"><div className="mb-5 flex flex-wrap gap-2 text-sm text-muted"><Link href="/">Home</Link><span>/</span><Link href="/cart">Cart</Link><span>/</span><span className="text-ink">Checkout</span></div><h1 className="font-core text-[34px] font-semibold text-ink">Checkout</h1></div><form onSubmit={submit} className="grid gap-12 lg:grid-cols-[1fr_400px]"><section><h2 className="font-core text-2xl font-semibold text-ink">Billing details</h2><div className="mt-8 grid gap-6 sm:grid-cols-2"><label className="grid gap-2 text-sm font-semibold">First name<input required name="firstName" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label><label className="grid gap-2 text-sm font-semibold">Last name<input required name="lastName" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label><label className="grid gap-2 text-sm font-semibold">Country / Region<select name="country" className="h-14 rounded-soft bg-canvas px-5 font-normal"><option>United States</option><option>Azerbaijan</option><option>United Kingdom</option><option>Russia</option></select></label><label className="grid gap-2 text-sm font-semibold">State<input required name="state" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label><label className="grid gap-2 text-sm font-semibold sm:col-span-2">Street address<input required name="street" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label><label className="grid gap-2 text-sm font-semibold">Town / City<input required name="city" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label><label className="grid gap-2 text-sm font-semibold">Postal code<input required name="postalCode" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label></div><div className="mt-8 border-t border-line/50 pt-8"><h2 className="font-core text-2xl font-semibold text-ink">Shipping method</h2><div className="mt-5 flex items-center gap-4 rounded-soft bg-canvas p-5"><span className="grid size-10 place-items-center rounded-full bg-white"><LockKeyhole size={18} /></span><span className="flex-1"><strong className="block text-ink">Standard delivery</strong><span className="text-sm text-muted">Delivery within 5-7 business days</span></span><strong className="text-ink">FREE</strong></div></div><div className="mt-8 rounded-card border border-line/60 bg-white p-5"><h2 className="font-core text-xl font-semibold text-ink">Card details</h2><div className="mt-4 grid gap-3"><div className="rounded-soft border border-line p-4"><CardNumberElement options={elementOptions} /></div><div className="grid grid-cols-2 gap-3"><div className="rounded-soft border border-line p-4"><CardExpiryElement options={elementOptions} /></div><div className="rounded-soft border border-line p-4"><CardCvcElement options={elementOptions} /></div></div></div><p className="mt-3 text-xs text-muted">Test card: 4242 4242 4242 4242, expiry 12/30, CVC 123</p></div>{error && <p className="mt-7 rounded-soft bg-[#ffe9e9] px-4 py-3 text-sm text-[#a51d2d]">{error}</p>}</section><aside className="h-fit rounded-card bg-canvas p-6 sm:p-8"><h2 className="font-core text-2xl font-semibold text-ink">Order summary</h2><div className="mt-6 grid gap-4">{items.map((item) => <div key={item.product.slug} className="flex gap-3"><div className="relative size-16 shrink-0 overflow-hidden rounded-soft bg-white"><Image src={item.product.image} alt={item.product.name} fill sizes="64px" className="object-cover" /></div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-ink">{item.product.name}</p><p className="mt-1 text-xs text-muted">Qty {item.quantity}</p></div><span className="text-sm font-semibold">${(Number(item.product.price.replace("$", "")) * item.quantity).toFixed(2)}</span></div>)}</div><div className="mt-7 flex justify-between border-t border-line/60 pt-5 text-lg font-semibold"><span>Total</span><span>${subtotal.toFixed(2)}</span></div><button disabled={submitting || !items.length || !stripe} className="mt-7 flex h-14 w-full items-center justify-center rounded-soft bg-accent font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{submitting ? "Processing..." : "Pay securely"}</button><p className="mt-4 text-center text-xs text-muted">Stock is validated securely on the server.</p></aside></form></main>;
+  return <main className="mx-auto max-w-content px-5 py-10 sm:px-8 sm:py-14 lg:px-0 lg:py-16"><div className="mb-12"><div className="mb-5 flex flex-wrap gap-2 text-sm text-muted"><Link href="/">Home</Link><span>/</span><Link href="/cart">Cart</Link><span>/</span><span className="text-ink">Checkout</span></div><h1 className="font-core text-[34px] font-semibold text-ink">Checkout</h1></div><form onSubmit={submit} className="grid gap-12 lg:grid-cols-[1fr_400px]"><section><h2 className="font-core text-2xl font-semibold text-ink">Billing details</h2><div className="mt-8 grid gap-6 sm:grid-cols-2"><label className="grid gap-2 text-sm font-semibold">First name<input required name="firstName" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label><label className="grid gap-2 text-sm font-semibold">Last name<input required name="lastName" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label><label className="grid gap-2 text-sm font-semibold">Country / Region<select name="country" className="h-14 rounded-soft bg-canvas px-5 font-normal"><option>United States</option><option>Azerbaijan</option><option>United Kingdom</option><option>Russia</option></select></label><label className="grid gap-2 text-sm font-semibold">State<input required name="state" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label><label className="grid gap-2 text-sm font-semibold sm:col-span-2">Street address<input required name="street" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label><label className="grid gap-2 text-sm font-semibold">Town / City<input required name="city" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label><label className="grid gap-2 text-sm font-semibold">Postal code<input required name="postalCode" className="h-14 rounded-soft bg-canvas px-5 font-normal outline-none focus:ring-1 focus:ring-accent" /></label></div><div className="mt-8 border-t border-line/50 pt-8"><h2 className="font-core text-2xl font-semibold text-ink">Shipping method</h2><div className="mt-5 flex items-center gap-4 rounded-soft bg-canvas p-5"><span className="grid size-10 place-items-center rounded-full bg-white"><LockKeyhole size={18} /></span><span className="flex-1"><strong className="block text-ink">Standard delivery</strong><span className="text-sm text-muted">Delivery within 5-7 business days</span></span><strong className="text-ink">FREE</strong></div></div><div className="mt-8 rounded-card border border-line/60 bg-white p-5"><h2 className="font-core text-xl font-semibold text-ink">Card details</h2>{demoPayments ? <><div className="mt-4 grid gap-3"><input required name="demoCardNumber" inputMode="numeric" placeholder="Card number" defaultValue="4242 4242 4242 4242" className="h-12 rounded-soft border border-line px-4 outline-none focus:ring-1 focus:ring-accent" /><div className="grid grid-cols-2 gap-3"><input required name="demoExpiry" inputMode="numeric" placeholder="MM/YY" defaultValue="12/30" className="h-12 rounded-soft border border-line px-4 outline-none focus:ring-1 focus:ring-accent" /><input required name="demoCvc" inputMode="numeric" placeholder="CVV" defaultValue="123" className="h-12 rounded-soft border border-line px-4 outline-none focus:ring-1 focus:ring-accent" /></div></div><p className="mt-3 text-xs text-muted">Local demo payment mode. Test card: 4242 4242 4242 4242</p></> : <><div className="mt-4 grid gap-3"><div className="rounded-soft border border-line p-4"><CardNumberElement options={elementOptions} /></div><div className="grid grid-cols-2 gap-3"><div className="rounded-soft border border-line p-4"><CardExpiryElement options={elementOptions} /></div><div className="rounded-soft border border-line p-4"><CardCvcElement options={elementOptions} /></div></div></div><p className="mt-3 text-xs text-muted">Test card: 4242 4242 4242 4242, expiry 12/30, CVC 123</p></>}</div>{error && <p className="mt-7 rounded-soft bg-[#ffe9e9] px-4 py-3 text-sm text-[#a51d2d]">{error}</p>}</section><aside className="h-fit rounded-card bg-canvas p-6 sm:p-8"><h2 className="font-core text-2xl font-semibold text-ink">Order summary</h2><div className="mt-6 grid gap-4">{items.map((item) => <div key={item.product.slug} className="flex gap-3"><div className="relative size-16 shrink-0 overflow-hidden rounded-soft bg-white"><Image src={item.product.image} alt={item.product.name} fill sizes="64px" className="object-cover" /></div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-ink">{item.product.name}</p><p className="mt-1 text-xs text-muted">Qty {item.quantity}</p></div><span className="text-sm font-semibold">${(Number(item.product.price.replace("$", "")) * item.quantity).toFixed(2)}</span></div>)}</div><div className="mt-7 flex justify-between border-t border-line/60 pt-5 text-lg font-semibold"><span>Total</span><span>${subtotal.toFixed(2)}</span></div><button disabled={submitting || !items.length || (!demoPayments && !stripe)} className="mt-7 flex h-14 w-full items-center justify-center rounded-soft bg-accent font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{submitting ? "Processing..." : demoPayments ? "Complete demo payment" : "Pay securely"}</button><p className="mt-4 text-center text-xs text-muted">Stock is validated securely on the server.</p></aside></form></main>;
 }
