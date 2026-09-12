@@ -1,4 +1,5 @@
 const nextConfig = {
+  serverExternalPackages: ["mssql", "msnodesqlv8", "tedious"],
   images: {
     remotePatterns: [
       {

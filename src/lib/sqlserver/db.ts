@@ -1,20 +1,21 @@
-import sql from "mssql";
+import sql from "mssql/msnodesqlv8";
 
 let poolPromise: Promise<sql.ConnectionPool> | null = null;
 
 export function databaseConfigured() {
-  return Boolean(process.env.SQL_SERVER && process.env.SQL_DATABASE && process.env.SQL_USER && process.env.SQL_PASSWORD);
+  return Boolean(process.env.SQL_SERVER && process.env.SQL_DATABASE && (process.env.SQL_TRUSTED_CONNECTION === "true" || (process.env.SQL_USER && process.env.SQL_PASSWORD)));
 }
 
 function config(): sql.config {
   return {
     server: process.env.SQL_SERVER || "",
     database: process.env.SQL_DATABASE || "",
-    user: process.env.SQL_USER || "",
-    password: process.env.SQL_PASSWORD || "",
+    user: process.env.SQL_TRUSTED_CONNECTION === "true" ? undefined : process.env.SQL_USER || "",
+    password: process.env.SQL_TRUSTED_CONNECTION === "true" ? undefined : process.env.SQL_PASSWORD || "",
     options: {
       encrypt: process.env.SQL_ENCRYPT !== "false",
-      trustServerCertificate: process.env.SQL_TRUST_SERVER_CERTIFICATE === "true"
+      trustServerCertificate: process.env.SQL_TRUST_SERVER_CERTIFICATE === "true",
+      trustedConnection: process.env.SQL_TRUSTED_CONNECTION === "true"
     },
     pool: { max: 10, min: 0, idleTimeoutMillis: 30000 }
   };
